@@ -13,17 +13,13 @@ export default async function handler(req, res) {
         "Content-Type": "application/json"
       },
       body: JSON.stringify({
-        // Model options: "llama-3.3-70b-versatile" or "llama-3.1-8b-instant"
-        model: "llama-3.3-70b-versatile", 
+        model: "llama-3.3-70b-versatile", // Recommended high-reasoning model
         messages: [
           { 
             role: "system", 
             content: "You are an expert LNAT tutor evaluating legal reasoning, spot-checking logical fallacies, and analyzing Section B essay structures." 
           },
-          { 
-            role: "user", 
-            content: prompt 
-          }
+          { role: "user", content: prompt }
         ],
         temperature: 0.5,
         max_tokens: 1500
@@ -33,14 +29,16 @@ export default async function handler(req, res) {
     const data = await response.json();
 
     if (!response.ok) {
+      // Logs the exact error message from Groq if something is wrong
+      console.error("Groq Error Response:", data);
       return res.status(response.status).json({ error: data.error?.message || 'Groq API Error' });
     }
 
-    // Extract generated text from the OpenAI-style JSON response
     const outputText = data.choices[0].message.content;
     return res.status(200).json({ result: outputText });
 
   } catch (error) {
+    console.error("Server Error:", error);
     return res.status(500).json({ error: 'Internal Server Error' });
   }
 }
