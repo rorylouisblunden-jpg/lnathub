@@ -13,7 +13,7 @@ export default async function handler(req, res) {
         "Content-Type": "application/json"
       },
       body: JSON.stringify({
-        model: "llama-3.3-70b-versatile", // Recommended high-reasoning model
+        model: "llama3-70b-8192", // Recommended high-reasoning model
         messages: [
           { 
             role: "system", 
