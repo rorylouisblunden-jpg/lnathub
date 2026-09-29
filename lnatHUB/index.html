@@ -1092,10 +1092,10 @@ Return ONLY JSON matching this structure:
     }
 
 /* =========================================================================
-       API EXECUTION & ERROR HANDLING
-       ========================================================================= */
+   API EXECUTION & ERROR HANDLING
+   ========================================================================= */
 
-  <!-- Include Google Gen AI SDK -->
+<!-- Include Google Gen AI SDK -->
 <script type="importmap">
   {
     "imports": {
@@ -1107,7 +1107,11 @@ Return ONLY JSON matching this structure:
 <script type="module">
   import { GoogleGenAI, Type } from '@google/genai';
 
-  // Helper to map standard string types to GoogleGenAI Type Enums
+  // Internal state tracking
+  let sessionApiKey = "";
+  let lastAction = null;
+
+  // Helper to map standard schema string types to GoogleGenAI Type Enums
   function convertTypeToEnum(typeStr) {
     switch (typeStr?.toLowerCase()) {
       case 'object': return Type.OBJECT;
@@ -1135,12 +1139,13 @@ Return ONLY JSON matching this structure:
     return formatted;
   }
 
+  // --- Explicit Window Bindings for Inline Event Handlers ---
+
   window.executeGeminiRequest = async function(prompt, schema) {
-    // Check for API key in memory or localStorage
     let apiKey = sessionApiKey || localStorage.getItem('lnat_gemini_api_key');
     
     if (!apiKey) {
-      openApiKeyModal();
+      window.openApiKeyModal();
       throw new Error("API Key required. Please enter your Gemini API key.");
     }
 
@@ -1163,7 +1168,6 @@ Return ONLY JSON matching this structure:
 
       return JSON.parse(response.text);
     } catch (err) {
-      // If unauthorized/invalid key, clear stored key so user can re-enter
       if (err.message && (err.message.includes('401') || err.message.includes('API key'))) {
         localStorage.removeItem('lnat_gemini_api_key');
         sessionApiKey = "";
@@ -1174,35 +1178,50 @@ Return ONLY JSON matching this structure:
 
   window.handleApiError = function(err) {
     console.error("API Error:", err);
-    document.getElementById('error-message-text').textContent = err.message || "Could not complete generation.";
-    showView('view-error');
+    const errorElem = document.getElementById('error-message-text');
+    if (errorElem) {
+      errorElem.textContent = err.message || "Could not complete generation.";
+    }
+    if (typeof window.showView === 'function') {
+      window.showView('view-error');
+    }
+  };
+
+  window.setLastAction = function(fn) {
+    if (typeof fn === 'function') {
+      lastAction = fn;
+    }
   };
 
   window.retryLastAction = function() {
     if (typeof lastAction === 'function') {
       lastAction();
-    } else {
-      showView('view-main-menu');
+    } else if (typeof window.showView === 'function') {
+      window.showView('view-main-menu');
     }
   };
 
   window.openApiKeyModal = function() {
-    document.getElementById('api-key-modal').classList.remove('hidden');
-  };
-
-  window.saveUserApiKey = function() {
-    const val = document.getElementById('input-api-key').value.trim();
-    if (val) {
-      sessionApiKey = val;
-      localStorage.setItem('lnat_gemini_api_key', val);
-      closeApiKeyModal();
-      retryLastAction();
-    }
+    const modal = document.getElementById('api-key-modal');
+    if (modal) modal.classList.remove('hidden');
   };
 
   window.closeApiKeyModal = function() {
-    document.getElementById('api-key-modal').classList.add('hidden');
+    const modal = document.getElementById('api-key-modal');
+    if (modal) modal.classList.add('hidden');
   };
-  </script>
+
+  window.saveUserApiKey = function() {
+    const input = document.getElementById('input-api-key');
+    const val = input ? input.value.trim() : "";
+    if (val) {
+      sessionApiKey = val;
+      localStorage.setItem('lnat_gemini_api_key', val);
+      window.closeApiKeyModal();
+      window.retryLastAction();
+    }
+  };
+</script>
+
 </body>
 </html>
