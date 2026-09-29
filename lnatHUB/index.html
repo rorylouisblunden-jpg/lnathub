@@ -1,538 +1,138 @@
 <!DOCTYPE html>
-<html lang="en" class="h-full bg-slate-950 text-slate-100">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>LNAT Endless Practice Platform • Section A & B</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Inter:wght@300;400;500;600;700&family=Lora:ital,wght@0,400;0,500;0,600;1,400;1,500&display=swap" rel="stylesheet">
-  <script>
-    tailwind.config = {
-      darkMode: 'class',
-      theme: {
-        extend: {
-          fontFamily: {
-            sans: ['Inter', 'sans-serif'],
-            serif: ['Lora', 'serif'],
-            brand: ['Cinzel', 'serif']
-          }
-        }
-      }
-    }
-  </script>
+  <title>AI Generator</title>
   <style>
-    ::-webkit-scrollbar { width: 6px; height: 6px; }
-    ::-webkit-scrollbar-track { background: rgba(15, 23, 42, 0.6); }
-    ::-webkit-scrollbar-thumb { background: rgba(148, 163, 184, 0.2); border-radius: 3px; }
-    ::-webkit-scrollbar-thumb:hover { background: rgba(148, 163, 184, 0.4); }
-    .serif-text p { margin-bottom: 1.25rem; line-height: 1.85; text-align: justify; hyphens: auto; }
+    :root {
+      --bg-color: #0d1117;
+      --card-bg: #161b22;
+      --border-color: #30363d;
+      --text-main: #c9d1d9;
+      --accent-gold: #f59e0b;
+      --accent-blue: #1f2937;
+      --accent-blue-hover: #374151;
+      --danger-red: #ef4444;
+    }
+
+    body {
+      background-color: var(--bg-color);
+      color: var(--text-main);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      margin: 0;
+      padding: 20px;
+    }
+
+    .modal-card {
+      background-color: var(--card-bg);
+      border: 1px solid #2d1e2f;
+      border-radius: 16px;
+      padding: 32px 24px;
+      max-width: 450px;
+      width: 100%;
+      text-align: center;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+    }
+
+    .icon-container {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      border: 1px solid #451a28;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 20px auto;
+      color: var(--danger-red);
+      font-size: 20px;
+      font-weight: bold;
+    }
+
+    h2 {
+      font-size: 1.25rem;
+      margin: 0 0 16px 0;
+      color: #ffffff;
+    }
+
+    p.error-message {
+      font-size: 0.9rem;
+      color: #8b949e;
+      line-height: 1.5;
+      margin-bottom: 24px;
+    }
+
+    .button-group {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+    }
+
+    .btn {
+      border: none;
+      border-radius: 20px;
+      padding: 10px 24px;
+      font-weight: 600;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: background-color 0.2s ease;
+    }
+
+    .btn-primary {
+      background-color: var(--accent-gold);
+      color: #000000;
+    }
+
+    .btn-primary:hover {
+      background-color: #d97706;
+    }
+
+    .btn-secondary {
+      background-color: #1e293b;
+      color: #94a3b8;
+    }
+
+    .btn-secondary:hover {
+      background-color: #334155;
+    }
   </style>
 </head>
-<body class="h-full flex flex-col font-sans antialiased selection:bg-amber-500 selection:text-slate-950">
+<body>
 
-  <!-- Header Navigation & Dashboard Controls -->
-  <header class="border-b border-slate-800 bg-slate-900/90 backdrop-blur sticky top-0 z-30 px-4 py-3 shrink-0">
-    <div class="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-3">
-      
-      <!-- Brand & Mode Switcher -->
-      <div class="flex items-center space-x-3">
-        <button onclick="showView('view-main-menu')" class="flex items-center gap-3 group text-left">
-          <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-amber-600 to-amber-400 flex items-center justify-center font-brand font-bold text-slate-950 text-xl shadow-lg shadow-amber-500/10 group-hover:scale-105 transition">
-            L
-          </div>
-          <div>
-            <h1 class="font-brand text-lg font-bold tracking-wider text-slate-100 flex items-center gap-2">
-              LNAT <span id="header-mode-badge" class="text-amber-400 font-sans text-[10px] uppercase font-bold tracking-normal px-2 py-0.5 rounded border border-amber-500/30 bg-amber-500/10">Hub</span>
-            </h1>
-            <p class="text-xs text-slate-400">Oxford & Cambridge Law Admissions Suite</p>
-          </div>
-        </button>
-      </div>
-
-      <!-- Mode Switch Navigation -->
-      <div class="flex items-center space-x-2">
-        <button onclick="showView('view-main-menu')" class="px-3 py-1.5 rounded-lg border border-slate-800 bg-slate-950 hover:bg-slate-800 text-slate-300 text-xs transition flex items-center gap-1.5">
-          <svg class="w-3.5 h-3.5 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
-          <span>Main Menu</span>
-        </button>
-
-        <!-- Section A Metrics Bar -->
-        <div id="live-metrics-sec-a" class="hidden flex items-center space-x-3 bg-slate-950 border border-slate-800 rounded-xl p-1.5 px-3 text-xs">
-          <div class="text-center px-1">
-            <span class="block text-slate-400 text-[9px] uppercase font-semibold">Passages</span>
-            <span id="metric-passages" class="font-bold text-slate-200">0</span>
-          </div>
-          <div class="h-5 w-[1px] bg-slate-800"></div>
-          <div class="text-center px-1">
-            <span class="block text-slate-400 text-[9px] uppercase font-semibold">Weighted</span>
-            <span id="metric-score" class="font-bold text-amber-400">0 / 0</span>
-          </div>
-          <div class="h-5 w-[1px] bg-slate-800"></div>
-          <div class="text-center px-1">
-            <span class="block text-slate-400 text-[9px] uppercase font-semibold">Accuracy</span>
-            <span id="metric-accuracy" class="font-bold text-emerald-400">0%</span>
-          </div>
-          <button onclick="finishSectionA()" class="ml-1 px-2.5 py-1 bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 border border-rose-500/30 rounded-md font-medium transition text-[11px]">
-            Finish
-          </button>
-        </div>
-
-        <!-- Section B Essay Header Tools -->
-        <div id="live-metrics-sec-b" class="hidden flex items-center space-x-3 bg-slate-950 border border-slate-800 rounded-xl p-1.5 px-3 text-xs">
-          <div class="text-center px-1">
-            <span class="block text-slate-400 text-[9px] uppercase font-semibold">Words</span>
-            <span id="essay-word-count" class="font-bold text-slate-200">0</span>
-          </div>
-          <div class="h-5 w-[1px] bg-slate-800"></div>
-          <div class="text-center px-1">
-            <span class="block text-slate-400 text-[9px] uppercase font-semibold">Timer (40m)</span>
-            <span id="essay-timer-display" class="font-bold text-amber-400">40:00</span>
-          </div>
-        </div>
-
-      </div>
-
-    </div>
-  </header>
-
-  <main class="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 flex flex-col min-h-0 overflow-y-auto">
-
-    <!-- ================= VIEW 0: MAIN MENU ================= -->
-    <div id="view-main-menu" class="my-auto max-w-4xl mx-auto w-full py-6 space-y-8">
-      <div class="text-center space-y-3">
-        <span class="px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-widest bg-amber-500/10 border border-amber-500/30 text-amber-400">
-          LNAT Preparation Suite
-        </span>
-        <h2 class="font-brand text-3xl sm:text-5xl font-bold text-slate-100">Select Practice Mode</h2>
-        <p class="text-slate-400 text-sm sm:text-base max-w-xl mx-auto leading-relaxed">
-          Master critical reasoning for Section A or generate Cambridge-evaluated responses for Section B.
-        </p>
-      </div>
-
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
-        
-        <!-- CARD 1: SECTION A -->
-        <div class="group relative bg-slate-900/80 hover:bg-slate-900 border border-slate-800 hover:border-amber-500/50 rounded-2xl p-6 sm:p-8 flex flex-col justify-between transition-all duration-300 shadow-xl hover:shadow-amber-500/5">
-          <div class="space-y-4">
-            <div class="w-12 h-12 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-400 flex items-center justify-center font-bold text-lg">
-              A
-            </div>
-            <div>
-              <span class="text-xs font-semibold text-amber-400 uppercase tracking-wider">Multiple Choice</span>
-              <h3 class="font-brand text-2xl font-bold text-slate-100 mt-0.5">Section A Practice</h3>
-            </div>
-            <p class="text-slate-400 text-xs sm:text-sm leading-relaxed">
-              Endless generator of academic reading passages across ethics, politics, philosophy, and sociology with weighted distractor questions (1–3 pts).
-            </p>
-            <ul class="text-xs text-slate-400 space-y-2 pt-2">
-              <li class="flex items-center gap-2"><span class="text-emerald-400">✓</span> Real-time distractor & assumption analysis</li>
-              <li class="flex items-center gap-2"><span class="text-emerald-400">✓</span> Infinite non-repetitive passage engine</li>
-              <li class="flex items-center gap-2"><span class="text-emerald-400">✓</span> Weighted accuracy breakdown</li>
-            </ul>
-          </div>
-          <button onclick="startSectionA()" class="mt-8 w-full py-3 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold rounded-xl text-sm transition shadow-lg shadow-amber-500/20 flex items-center justify-center gap-2">
-            <span>Launch Section A</span>
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
-          </button>
-        </div>
-
-        <!-- CARD 2: SECTION B -->
-        <div class="group relative bg-slate-900/80 hover:bg-slate-900 border border-slate-800 hover:border-violet-500/50 rounded-2xl p-6 sm:p-8 flex flex-col justify-between transition-all duration-300 shadow-xl hover:shadow-violet-500/5">
-          <div class="space-y-4">
-            <div class="w-12 h-12 rounded-xl bg-violet-500/10 border border-violet-500/30 text-violet-400 flex items-center justify-center font-bold text-lg">
-              B
-            </div>
-            <div>
-              <span class="text-xs font-semibold text-violet-400 uppercase tracking-wider">Essay Writing Arena</span>
-              <h3 class="font-brand text-2xl font-bold text-slate-100 mt-0.5">Section B Practice</h3>
-            </div>
-            <p class="text-slate-400 text-xs sm:text-sm leading-relaxed">
-              Generate LNAT Section B essay prompts (or adapt underlying Section A debates) and receive Cambridge Tripos-style marking out of 10 with actionable advice to reach a 10/10.
-            </p>
-            <ul class="text-xs text-slate-400 space-y-2 pt-2">
-              <li class="flex items-center gap-2"><span class="text-violet-400">★</span> Cambridge Law Tripos rubric out of 10</li>
-              <li class="flex items-center gap-2"><span class="text-violet-400">★</span> Concrete advice & roadmap to 10/10</li>
-              <li class="flex items-center gap-2"><span class="text-violet-400">★</span> 40-minute simulation timer & word counter</li>
-            </ul>
-          </div>
-          <button onclick="startSectionB()" class="mt-8 w-full py-3 bg-violet-500 hover:bg-violet-400 text-slate-950 font-bold rounded-xl text-sm transition shadow-lg shadow-violet-500/20 flex items-center justify-center gap-2">
-            <span>Launch Section B Arena</span>
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
-          </button>
-        </div>
-
-      </div>
-    </div>
-
-
-    <!-- ================= COMMON LOADING STATE ================= -->
-    <div id="view-loading" class="hidden my-auto flex flex-col items-center justify-center py-20 space-y-5 text-center">
-      <div class="relative w-14 h-14">
-        <div class="absolute inset-0 rounded-full border-2 border-amber-500/20"></div>
-        <div class="absolute inset-0 rounded-full border-2 border-amber-400 border-t-transparent animate-spin"></div>
-      </div>
-      <div class="space-y-1">
-        <p id="loading-main-text" class="text-base font-medium text-slate-200 animate-pulse">Generating academic content...</p>
-        <p id="loading-sub-text" class="text-xs text-slate-400">Synthesizing dense arguments and analytical structures</p>
-      </div>
-    </div>
-
-
-    <!-- ================= ERROR STATE ================= -->
-    <div id="view-error" class="hidden my-auto max-w-md mx-auto w-full p-6 bg-slate-900 border border-rose-500/30 rounded-2xl text-center space-y-4 shadow-xl">
-      <div class="w-12 h-12 rounded-full bg-rose-500/10 border border-rose-500/30 text-rose-400 flex items-center justify-center mx-auto text-xl font-bold">!</div>
-      <h3 class="text-base font-bold text-slate-100">Generation Issue Encountered</h3>
-      <p id="error-message-text" class="text-xs text-slate-400 leading-relaxed">Could not complete request to Groq API.</p>
-      <div class="pt-2 flex gap-3 justify-center">
-        <button id="btn-error-retry" onclick="retryLastAction()" class="px-5 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 font-semibold rounded-xl text-xs transition">
-          Try Again
-        </button>
-        <button onclick="openApiKeyModal()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs transition">
-          Set API Key
-        </button>
-      </div>
-    </div>
-
-
-    <!-- ================= SECTION A WORKSPACE ================= -->
-    <div id="view-section-a" class="hidden flex-1 grid grid-cols-1 lg:grid-cols-12 gap-6 items-start min-h-0">
-      
-      <!-- Passage Container -->
-      <div class="lg:col-span-7 bg-slate-900/60 border border-slate-800 rounded-2xl flex flex-col h-full max-h-[calc(100vh-140px)] shadow-xl overflow-hidden">
-        <div class="p-4 border-b border-slate-800 bg-slate-900/90 flex justify-between items-center shrink-0">
-          <div class="flex items-center gap-2">
-            <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
-            <span id="passage-topic" class="text-xs font-semibold uppercase tracking-wider text-amber-400">Subject Area</span>
-          </div>
-          <span id="passage-number-badge" class="text-xs text-slate-400 font-medium">Passage #1</span>
-        </div>
-
-        <div class="flex-1 p-6 sm:p-8 overflow-y-auto serif-text text-slate-200 text-base leading-relaxed">
-          <h2 id="passage-title" class="font-brand text-xl sm:text-2xl font-bold text-slate-100 mb-6 border-b border-slate-800/80 pb-3">
-            Title
-          </h2>
-          <div id="passage-body"></div>
-        </div>
-      </div>
-
-      <!-- Questions Panel -->
-      <div class="lg:col-span-5 bg-slate-900/60 border border-slate-800 rounded-2xl flex flex-col h-full max-h-[calc(100vh-140px)] shadow-xl overflow-hidden">
-        <div class="p-4 border-b border-slate-800 bg-slate-900/90 flex justify-between items-center shrink-0">
-          <h3 class="text-sm font-semibold text-slate-200">Comprehension Questions</h3>
-          <span id="questions-counter" class="text-xs text-slate-400">0 of 0 Answered</span>
-        </div>
-
-        <div id="questions-list" class="flex-1 p-6 overflow-y-auto space-y-6">
-          <!-- Dynamic Question Cards -->
-        </div>
-
-        <!-- Question Action Footer -->
-        <div class="p-4 border-t border-slate-800 bg-slate-900/90 flex items-center justify-between gap-3 shrink-0">
-          <button onclick="finishSectionA()" class="text-xs text-slate-400 hover:text-slate-200 underline transition">
-            Finish & see score
-          </button>
-          
-          <div class="flex items-center gap-2">
-            <button id="btn-submit-answers" onclick="submitPassageAnswers()" disabled class="px-4 py-2 bg-amber-500 hover:bg-amber-400 disabled:opacity-40 disabled:hover:bg-amber-500 text-slate-950 font-semibold rounded-xl text-xs transition">
-              Submit Answers
-            </button>
-            <button id="btn-next-passage" onclick="fetchAndLoadNextPassage()" class="hidden px-4 py-2 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-semibold rounded-xl text-xs transition flex items-center gap-1.5">
-              <span>Next Passage</span>
-              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
-            </button>
-          </div>
-        </div>
-      </div>
-
-    </div>
-
-
-    <!-- ================= SECTION A SUMMARY ================= -->
-    <div id="view-summary-a" class="hidden my-auto max-w-3xl mx-auto w-full py-8 space-y-8">
-      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 sm:p-8 text-center space-y-6 shadow-2xl relative overflow-hidden">
-        <div class="absolute -top-20 -right-20 w-56 h-56 bg-amber-500/10 rounded-full blur-3xl"></div>
-        
-        <div class="space-y-2">
-          <span id="summary-band-badge" class="inline-block px-3 py-1 rounded-full text-xs font-bold bg-amber-500/10 border border-amber-500/30 text-amber-400 uppercase tracking-wider">
-            Performance Band
-          </span>
-          <h2 class="font-brand text-3xl font-bold text-slate-100">Section A Session Results</h2>
-        </div>
-
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2">
-          <div class="bg-slate-950/80 border border-slate-800 p-4 rounded-xl">
-            <span class="block text-slate-400 text-[10px] font-semibold uppercase mb-1">Weighted Accuracy</span>
-            <span id="summary-accuracy" class="text-3xl font-bold text-emerald-400">0%</span>
-          </div>
-          <div class="bg-slate-950/80 border border-slate-800 p-4 rounded-xl">
-            <span class="block text-slate-400 text-[10px] font-semibold uppercase mb-1">Raw Score</span>
-            <span id="summary-raw" class="text-3xl font-bold text-slate-100">0 / 0</span>
-          </div>
-          <div class="bg-slate-950/80 border border-slate-800 p-4 rounded-xl">
-            <span class="block text-slate-400 text-[10px] font-semibold uppercase mb-1">Passages Completed</span>
-            <span id="summary-passages" class="text-3xl font-bold text-amber-400">0</span>
-          </div>
-        </div>
-
-        <div class="pt-2 flex justify-center gap-3">
-          <button onclick="resetAndRestartA()" class="px-6 py-3 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold rounded-xl text-sm transition shadow-lg shadow-amber-500/20">
-            Start New Section A Session
-          </button>
-          <button onclick="showView('view-main-menu')" class="px-6 py-3 bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold rounded-xl text-sm transition">
-            Main Menu
-          </button>
-        </div>
-      </div>
-
-      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-4">
-        <h3 class="font-brand text-lg font-bold text-slate-100">Attempted Passages Breakdown</h3>
-        <div id="summary-passage-history" class="space-y-3">
-          <!-- History items injected dynamically -->
-        </div>
-      </div>
-    </div>
-
-
-    <!-- ================= SECTION B WORKSPACE ================= -->
-    <div id="view-section-b" class="hidden flex-1 grid grid-cols-1 lg:grid-cols-12 gap-6 items-start min-h-0">
-      
-      <!-- Prompt Selection & Guidance -->
-      <div class="lg:col-span-5 bg-slate-900/60 border border-slate-800 rounded-2xl flex flex-col h-full max-h-[calc(100vh-140px)] shadow-xl overflow-hidden">
-        <div class="p-4 border-b border-slate-800 bg-slate-900/90 flex justify-between items-center shrink-0">
-          <div class="flex items-center gap-2">
-            <span class="w-2 h-2 rounded-full bg-violet-400 animate-pulse"></span>
-            <span id="essay-topic-badge" class="text-xs font-semibold uppercase tracking-wider text-violet-400">LNAT Essay Question</span>
-          </div>
-          <button onclick="generateNewEssayPrompt()" class="text-[11px] text-amber-400 hover:underline flex items-center gap-1">
-            <span>↺ New Prompt</span>
-          </button>
-        </div>
-
-        <div class="flex-1 p-6 overflow-y-auto space-y-5">
-          <div class="space-y-2">
-            <span class="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Prompt Context / Debate</span>
-            <h3 id="essay-prompt-title" class="font-brand text-xl font-bold text-slate-100 leading-snug">
-              Loading essay prompt...
-            </h3>
-          </div>
-
-          <div id="essay-prompt-context-box" class="bg-slate-950/70 border border-slate-800 rounded-xl p-4 text-xs text-slate-300 leading-relaxed space-y-2">
-            <span class="text-[10px] font-semibold text-violet-400 uppercase tracking-wider block">Analytical Angles to Consider</span>
-            <div id="essay-prompt-subquestions" class="space-y-1.5 text-slate-400">
-              <!-- Dynamic guidance points -->
-            </div>
-          </div>
-
-          <div class="bg-violet-500/10 border border-violet-500/20 rounded-xl p-4 text-xs text-slate-300 space-y-2">
-            <span class="font-bold text-violet-300 flex items-center gap-1.5">
-              <span>🏛️</span> Cambridge Tripos Evaluation Criteria
-            </span>
-            <ul class="space-y-1 text-[11px] text-slate-400">
-              <li>• <strong>Central Thesis:</strong> Unambiguous position maintained throughout.</li>
-              <li>• <strong>Counterarguments:</strong> Fairly articulated and analytically refuted.</li>
-              <li>• <strong>Conceptual Precision:</strong> Key terms explicitly defined without vagueness.</li>
-              <li>• <strong>Logical Rigour:</strong> No leap in logic, non-sequiturs, or moral bias.</li>
-            </ul>
-          </div>
-        </div>
-
-        <div class="p-4 border-t border-slate-800 bg-slate-900/90 flex items-center justify-between gap-3 shrink-0">
-          <button onclick="resetTimer()" class="text-xs text-slate-400 hover:text-slate-200 underline">
-            Reset 40m Timer
-          </button>
-          <button onclick="submitEssayForCambridgeMarking()" class="px-5 py-2.5 bg-violet-500 hover:bg-violet-400 text-slate-950 font-bold rounded-xl text-xs transition shadow-lg shadow-violet-500/20 flex items-center gap-1.5">
-            <span>Evaluate (Cambridge Style)</span>
-            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
-          </button>
-        </div>
-      </div>
-
-      <!-- Essay Editor Pane -->
-      <div class="lg:col-span-7 bg-slate-900/60 border border-slate-800 rounded-2xl flex flex-col h-full max-h-[calc(100vh-140px)] shadow-xl overflow-hidden">
-        <div class="p-4 border-b border-slate-800 bg-slate-900/90 flex justify-between items-center shrink-0">
-          <span class="text-xs font-semibold text-slate-300">Section B Essay Canvas</span>
-          <span class="text-[11px] text-slate-400">Recommended: 500–750 words</span>
-        </div>
-
-        <div class="flex-1 p-4 sm:p-6 flex flex-col min-h-0 bg-slate-950/40">
-          <textarea 
-            id="essay-text-input"
-            oninput="updateEssayStats()"
-            placeholder="Type or paste your LNAT Section B essay response here...
-
-Tip for a top score:
-1. Define key ambiguous terms in Paragraph 1.
-2. Advance a decisive thesis early.
-3. Dedicate a full paragraph to the strongest counter-argument before refuting it."
-            class="w-full h-full flex-1 bg-transparent border-0 resize-none text-slate-100 font-serif text-base sm:text-lg leading-relaxed focus:outline-none focus:ring-0 placeholder:text-slate-600 placeholder:font-sans"
-          ></textarea>
-        </div>
-      </div>
-
-    </div>
-
-
-    <!-- ================= SECTION B FEEDBACK DISPLAY ================= -->
-    <div id="view-section-b-feedback" class="hidden max-w-4xl mx-auto w-full py-6 space-y-8">
-      
-      <!-- Top Score Header Banner -->
-      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 sm:p-8 space-y-6 shadow-2xl relative overflow-hidden">
-        <div class="flex flex-col sm:flex-row items-center justify-between gap-6 border-b border-slate-800/80 pb-6">
-          <div class="space-y-2 text-center sm:text-left">
-            <span class="px-3 py-1 rounded-full text-xs font-bold bg-violet-500/10 border border-violet-500/30 text-violet-400 uppercase tracking-wider">
-              Cambridge Tripos Assessment
-            </span>
-            <h2 class="font-brand text-2xl sm:text-3xl font-bold text-slate-100">Section B Essay Feedback</h2>
-            <p id="sec-b-praise-line" class="text-slate-300 text-sm italic">
-              "An exceptionally well-argued response displaying robust legal-philosophical structure."
-            </p>
-          </div>
-
-          <!-- Grade Badge -->
-          <div class="flex flex-col items-center justify-center p-4 bg-slate-950 border border-violet-500/30 rounded-2xl shrink-0 min-w-[140px]">
-            <span class="text-[10px] text-slate-400 uppercase font-semibold">Overall Grade</span>
-            <span id="sec-b-score-badge" class="text-4xl font-brand font-bold text-violet-400 my-0.5">8 / 10</span>
-            <span id="sec-b-band-badge" class="text-[11px] font-semibold text-emerald-400">First-Class Potential</span>
-          </div>
-        </div>
-
-        <!-- Rubric Grid -->
-        <div id="sec-b-rubric-grid" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <!-- Dynamic Rubric Bars -->
-        </div>
-      </div>
-
-      <!-- Growth Areas & Citations -->
-      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 sm:p-8 space-y-6 shadow-xl">
-        <div class="flex items-center gap-2 border-b border-slate-800 pb-3">
-          <span class="text-amber-400 text-lg">💡</span>
-          <h3 class="font-brand text-xl font-bold text-slate-100">Key Areas for Refinement</h3>
-        </div>
-
-        <div id="sec-b-growth-list" class="space-y-4">
-          <!-- Dynamic feedback items with citations -->
-        </div>
-      </div>
-
-      <!-- Actionable Roadmap to 10/10 -->
-      <div class="bg-slate-900 border border-amber-500/30 rounded-2xl p-6 sm:p-8 space-y-5 shadow-xl bg-gradient-to-br from-amber-500/5 to-transparent">
-        <div class="flex items-center gap-2">
-          <span class="text-amber-400 text-xl">🎯</span>
-          <h3 class="font-brand text-xl font-bold text-amber-300">How to Elevate This Essay to 10/10</h3>
-        </div>
-
-        <ul id="sec-b-roadmap-list" class="space-y-3 text-xs sm:text-sm text-slate-200">
-          <!-- Dynamic actionable steps -->
-        </ul>
-      </div>
-
-      <!-- Action Bar -->
-      <div class="flex justify-center gap-4">
-        <button onclick="showView('view-section-b')" class="px-6 py-3 bg-violet-500 hover:bg-violet-400 text-slate-950 font-bold rounded-xl text-xs sm:text-sm transition shadow-lg shadow-violet-500/20">
-          Return to Essay Editor & Revise
-        </button>
-        <button onclick="startSectionB()" class="px-6 py-3 bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold rounded-xl text-xs sm:text-sm transition">
-          Try a New Essay Prompt
-        </button>
-      </div>
-
-    </div>
-
-  </main>
-
-  <!-- API Key Fallback Modal -->
-  <div id="api-key-modal" class="hidden fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 max-w-md w-full space-y-4 shadow-2xl relative">
-      <h3 class="text-base font-bold text-slate-100">Groq API Key Required</h3>
-      <p class="text-xs text-slate-400 leading-relaxed">
-        Live generation uses GroqCloud models. Get a free API key at <a href="https://console.groq.com/keys" target="_blank" class="text-amber-400 underline font-semibold">console.groq.com/keys</a> and paste it below to continue.
-      </p>
-      <input type="password" id="input-api-key" placeholder="gsk_..." class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-sm text-slate-200 focus:outline-none focus:border-amber-500">
-      <div class="flex gap-2">
-        <button onclick="saveUserApiKey()" class="flex-1 py-2.5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-semibold rounded-xl text-xs transition">
-          Save Key & Continue
-        </button>
-        <button onclick="closeApiKeyModal()" class="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs transition">
-          Dismiss
-        </button>
-      </div>
+  <div class="modal-card" id="errorModal">
+    <div class="icon-container">!</div>
+    <h2>Generation Issue Encountered</h2>
+    <p class="error-message" id="errorMessageText">
+      The model `llama-3.3-70b-versatile` does not exist or you do not have access to it.
+    </p>
+    <div class="button-group">
+      <button class="btn btn-primary" onclick="retryGeneration()">Try Again</button>
+      <button class="btn btn-secondary" onclick="openApiKeyModal()">Set API Key</button>
     </div>
   </div>
 
   <script>
-    // Rotational Subject List for Section A
-    const SUBJECT_ROTATION = [
-      "philosophy",
-      "politics",
-      "ethics",
-      "literature",
-      "science",
-      "sociology",
-      "economics",
-      "history"
-    ];
-
-    // State Management
     let sessionApiKey = "";
-    let lastAction = null;
-    let timerInterval = null;
-    let secondsRemaining = 40 * 60;
 
-    const state = {
-      // Section A State
-      completedPassagesCount: 0,
-      totalWeightedEarned: 0,
-      totalWeightedPossible: 0,
-      totalRawCorrect: 0,
-      totalQuestionsAnswered: 0,
-      currentPassage: null,
-      currentAnswers: {},
-      isSubmitted: false,
-      historyTitles: [],
-      historyLogs: [],
-
-      // Section B State
-      currentEssayPrompt: null,
-      essayText: ""
-    };
-
-    function showView(viewId) {
-      document.getElementById('view-main-menu').classList.add('hidden');
-      document.getElementById('view-loading').classList.add('hidden');
-      document.getElementById('view-error').classList.add('hidden');
-      document.getElementById('view-section-a').classList.add('hidden');
-      document.getElementById('view-summary-a').classList.add('hidden');
-      document.getElementById('view-section-b').classList.add('hidden');
-      document.getElementById('view-section-b-feedback').classList.add('hidden');
-
-      document.getElementById('live-metrics-sec-a').classList.add('hidden');
-      document.getElementById('live-metrics-sec-b').classList.add('hidden');
-
-      const headerBadge = document.getElementById('header-mode-badge');
-
-      if (viewId === 'view-section-a') {
-        document.getElementById('live-metrics-sec-a').classList.remove('hidden');
-        headerBadge.textContent = "Section A";
-        headerBadge.className = "text-amber-400 font-sans text-[10px] uppercase font-bold tracking-normal px-2 py-0.5 rounded border border-amber-500/30 bg-amber-500/10";
-      } else if (viewId === 'view-section-b') {
-        document.getElementById('live-metrics-sec-b').classList.remove('hidden');
-        headerBadge.textContent = "Section B Arena";
-        headerBadge.className = "text-violet-400 font-sans text-[10px] uppercase font-bold tracking-normal px-2 py-0.5 rounded border border-violet-500/30 bg-violet-500/10";
-      } else {
-        headerBadge.textContent = "Hub";
-        headerBadge.className = "text-amber-400 font-sans text-[10px] uppercase font-bold tracking-normal px-2 py-0.5 rounded border border-amber-500/30 bg-amber-500/10";
+    function openApiKeyModal() {
+      const key = prompt("Please enter your GroqCloud API Key:");
+      if (key) {
+        sessionApiKey = key.trim();
+        localStorage.setItem('groq_api_key', sessionApiKey);
+        alert("API Key saved.");
       }
-
-      document.getElementById(viewId).classList.remove('hidden');
     }
 
-    /* =========================================================================
-       GROQ API EXECUTION ENGINE
-       ========================================================================= */
+    function retryGeneration() {
+      document.getElementById('errorModal').style.display = 'none';
+      alert("Retrying request...");
+    }
 
-    async function executeGroqRequest(prompt, schema = null, model = "llama-3.3-70b-versatile") {
+    async function executeGroqRequest(prompt, schema = null, model = "llama-3.1-8b-instant") {
       let apiKey = sessionApiKey || localStorage.getItem('groq_api_key');
       
       if (!apiKey) {
@@ -587,556 +187,8 @@ Tip for a top score:
       }
     }
 
-    // Alias executeGeminiRequest to executeGroqRequest for seamless internal compatibility
+    // Alias for compatibility
     const executeGeminiRequest = executeGroqRequest;
-
-    function handleApiError(err) {
-      console.error("Groq API Error:", err);
-      const errorElem = document.getElementById('error-message-text');
-      if (errorElem) {
-        errorElem.textContent = err.message || "Could not complete request.";
-      }
-      showView('view-error');
-    }
-
-    function retryLastAction() {
-      if (typeof lastAction === 'function') {
-        lastAction();
-      } else {
-        showView('view-main-menu');
-      }
-    }
-
-    function openApiKeyModal() {
-      const modal = document.getElementById('api-key-modal');
-      if (modal) modal.classList.remove('hidden');
-    }
-
-    function closeApiKeyModal() {
-      const modal = document.getElementById('api-key-modal');
-      if (modal) modal.classList.add('hidden');
-    }
-
-    function saveUserApiKey() {
-      const input = document.getElementById('input-api-key');
-      const val = input ? input.value.trim() : "";
-      if (val) {
-        sessionApiKey = val;
-        localStorage.setItem('groq_api_key', val);
-        closeApiKeyModal();
-        retryLastAction();
-      }
-    }
-
-
-    /* =========================================================================
-       SECTION A LOGIC
-       ========================================================================= */
-
-    function startSectionA() {
-      showView('view-section-a');
-      if (!state.currentPassage) {
-        fetchAndLoadNextPassage();
-      }
-    }
-
-    function resetAndRestartA() {
-      state.completedPassagesCount = 0;
-      state.totalWeightedEarned = 0;
-      state.totalWeightedPossible = 0;
-      state.totalRawCorrect = 0;
-      state.totalQuestionsAnswered = 0;
-      state.currentPassage = null;
-      state.currentAnswers = {};
-      state.isSubmitted = false;
-      state.historyTitles = [];
-      state.historyLogs = [];
-
-      updateHeaderStatsA();
-      startSectionA();
-    }
-
-    async function fetchAndLoadNextPassage() {
-      lastAction = fetchAndLoadNextPassage;
-      const subject = SUBJECT_ROTATION[state.completedPassagesCount % SUBJECT_ROTATION.length];
-      
-      document.getElementById('loading-main-text').textContent = "Writing your next passage...";
-      document.getElementById('loading-sub-text').textContent = `Target Subject: ${subject.toUpperCase()} • Ensuring unique academic prose`;
-      showView('view-loading');
-
-      const avoidTitlesText = state.historyTitles.length > 0 
-        ? state.historyTitles.map(t => `"${t}"`).join(", ") 
-        : "None";
-
-      const promptText = `You are an expert LNAT (Law National Admissions Test) Section A question writer. Generate exactly ONE new reading passage with multiple-choice questions, in the "new style" LNAT format only (identifying underlying assumptions, interpreting implicit meaning, evaluating argument strength, identifying parallel reasoning, or tone/purpose analysis). The passage must:
-
-Be 220–320 words, in 2 paragraphs, on a non-law academic subject (philosophy, politics, ethics, literature, science, sociology, economics, history).
-Be dense, nuanced, academic prose presenting a genuine tension or debate.
-Rely on ZERO graphs or tables — solvable purely through textual analysis.
-Have exactly 3 or 4 multiple-choice questions, each with options a–e, exactly one correct answer, and subtle, plausible distractors.
-Assign each question a "weight" integer from 1 (easier) to 3 (hardest).
-Avoid duplicating these titles: ${avoidTitlesText}
-
-Respond with ONLY valid JSON strictly matching this structure:
-{
-  "title": "Passage Title Here",
-  "topic_area": "${subject}",
-  "text": ["Paragraph 1 text...", "Paragraph 2 text..."],
-  "questions": [
-    {
-      "prompt": "Question prompt text?",
-      "options": {
-        "a": "Option A text",
-        "b": "Option B text",
-        "c": "Option C text",
-        "d": "Option D text",
-        "e": "Option E text"
-      },
-      "answer": "a",
-      "weight": 2
-    }
-  ]
-}`;
-
-      try {
-        const data = await executeGroqRequest(promptText, true);
-        validatePassageData(data);
-        
-        state.currentPassage = data;
-        state.currentAnswers = {};
-        state.isSubmitted = false;
-
-        renderPassageView(data);
-        showView('view-section-a');
-      } catch (err) {
-        handleApiError(err);
-      }
-    }
-
-    function validatePassageData(data) {
-      if (!data || typeof data.title !== 'string' || !data.title.trim()) throw new Error("Invalid passage title received.");
-      if (!Array.isArray(data.text) || data.text.length === 0) throw new Error("Invalid passage text structure.");
-      if (!Array.isArray(data.questions) || data.questions.length < 3) throw new Error("Insufficient comprehension questions returned.");
-    }
-
-    function renderPassageView(data) {
-      document.getElementById('passage-topic').textContent = data.topic_area || "Academic Discourse";
-      document.getElementById('passage-number-badge').textContent = `Passage #${state.completedPassagesCount + 1}`;
-      document.getElementById('passage-title').textContent = data.title;
-      
-      const bodyEl = document.getElementById('passage-body');
-      bodyEl.innerHTML = data.text.map(p => `<p>${p}</p>`).join('');
-
-      renderQuestions(data.questions);
-
-      document.getElementById('btn-submit-answers').classList.remove('hidden');
-      document.getElementById('btn-submit-answers').disabled = true;
-      document.getElementById('btn-next-passage').classList.add('hidden');
-    }
-
-    function renderQuestions(questions) {
-      const container = document.getElementById('questions-list');
-      container.innerHTML = '';
-
-      questions.forEach((q, qIndex) => {
-        const card = document.createElement('div');
-        card.className = 'bg-slate-950/60 border border-slate-800 rounded-xl p-4 sm:p-5 space-y-3';
-
-        const weightBadgeClass = q.weight === 1 ? 'bg-blue-500/10 text-blue-400 border-blue-500/30' :
-                                 q.weight === 2 ? 'bg-amber-500/10 text-amber-400 border-amber-500/30' :
-                                 'bg-purple-500/10 text-purple-400 border-purple-500/30';
-
-        let optionsHtml = '';
-        ['a', 'b', 'c', 'd', 'e'].forEach(optKey => {
-          const optText = q.options[optKey] || '';
-          optionsHtml += `
-            <button 
-              id="opt-btn-${qIndex}-${optKey}"
-              onclick="selectOption(${qIndex}, '${optKey}')"
-              class="w-full text-left p-2.5 sm:p-3 rounded-lg border border-slate-800/80 bg-slate-900/40 hover:bg-slate-800/60 hover:border-slate-700 transition flex items-start gap-3 text-xs sm:text-sm text-slate-300 group"
-            >
-              <span id="opt-key-${qIndex}-${optKey}" class="w-5 h-5 rounded bg-slate-800 border border-slate-700 flex items-center justify-center font-bold text-[11px] text-slate-400 group-hover:text-amber-400 group-hover:border-amber-500/50 shrink-0 mt-0.5">
-                ${optKey.toUpperCase()}
-              </span>
-              <span class="leading-relaxed flex-1">${optText}</span>
-            </button>
-          `;
-        });
-
-        card.innerHTML = `
-          <div class="flex items-center justify-between gap-2">
-            <span class="text-[10px] font-bold px-2 py-0.5 rounded border ${weightBadgeClass}">
-              Weight ${q.weight} (${q.weight} ${q.weight === 1 ? 'pt' : 'pts'})
-            </span>
-            <span id="q-status-${qIndex}" class="text-[11px] text-slate-500 font-medium">Unanswered</span>
-          </div>
-          <p class="text-xs sm:text-sm font-semibold text-slate-100 leading-snug">${qIndex + 1}. ${q.prompt}</p>
-          <div class="space-y-2 pt-1">
-            ${optionsHtml}
-          </div>
-        `;
-
-        container.appendChild(card);
-      });
-
-      updateQuestionProgress();
-    }
-
-    function selectOption(qIndex, optKey) {
-      if (state.isSubmitted) return;
-      state.currentAnswers[qIndex] = optKey;
-
-      ['a', 'b', 'c', 'd', 'e'].forEach(key => {
-        const btn = document.getElementById(`opt-btn-${qIndex}-${key}`);
-        const keyTag = document.getElementById(`opt-key-${qIndex}-${key}`);
-        if (!btn) return;
-
-        if (key === optKey) {
-          btn.className = "w-full text-left p-2.5 sm:p-3 rounded-lg border border-amber-500/60 bg-amber-500/10 transition flex items-start gap-3 text-xs sm:text-sm text-amber-200 font-medium";
-          keyTag.className = "w-5 h-5 rounded bg-amber-500 text-slate-950 flex items-center justify-center font-bold text-[11px] shrink-0 mt-0.5";
-        } else {
-          btn.className = "w-full text-left p-2.5 sm:p-3 rounded-lg border border-slate-800/80 bg-slate-900/40 hover:bg-slate-800/60 hover:border-slate-700 transition flex items-start gap-3 text-xs sm:text-sm text-slate-300 group";
-          keyTag.className = "w-5 h-5 rounded bg-slate-800 border border-slate-700 flex items-center justify-center font-bold text-[11px] text-slate-400 shrink-0 mt-0.5";
-        }
-      });
-
-      document.getElementById(`q-status-${qIndex}`).textContent = "Selected";
-      document.getElementById(`q-status-${qIndex}`).className = "text-[11px] text-amber-400 font-semibold";
-
-      updateQuestionProgress();
-    }
-
-    function updateQuestionProgress() {
-      const totalQ = state.currentPassage ? state.currentPassage.questions.length : 0;
-      const answeredCount = Object.keys(state.currentAnswers).length;
-
-      document.getElementById('questions-counter').textContent = `${answeredCount} of ${totalQ} Answered`;
-
-      if (answeredCount === totalQ && totalQ > 0 && !state.isSubmitted) {
-        document.getElementById('btn-submit-answers').disabled = false;
-      }
-    }
-
-    function submitPassageAnswers() {
-      if (state.isSubmitted) return;
-      state.isSubmitted = true;
-
-      const questions = state.currentPassage.questions;
-      let passageEarned = 0;
-      let passagePossible = 0;
-      let passageCorrectCount = 0;
-
-      questions.forEach((q, qIndex) => {
-        const userChoice = state.currentAnswers[qIndex];
-        const isCorrect = userChoice === q.answer;
-
-        passagePossible += q.weight;
-        if (isCorrect) {
-          passageEarned += q.weight;
-          passageCorrectCount++;
-        }
-
-        ['a', 'b', 'c', 'd', 'e'].forEach(key => {
-          const btn = document.getElementById(`opt-btn-${qIndex}-${key}`);
-          if (!btn) return;
-          btn.disabled = true;
-
-          if (key === q.answer) {
-            btn.className = "w-full text-left p-2.5 sm:p-3 rounded-lg border border-emerald-500/60 bg-emerald-500/15 text-emerald-200 flex items-start gap-3 text-xs sm:text-sm font-medium";
-          } else if (key === userChoice && !isCorrect) {
-            btn.className = "w-full text-left p-2.5 sm:p-3 rounded-lg border border-rose-500/60 bg-rose-500/15 text-rose-200 flex items-start gap-3 text-xs sm:text-sm font-medium";
-          } else {
-            btn.className = "w-full text-left p-2.5 sm:p-3 rounded-lg border border-slate-900 bg-slate-950/30 opacity-40 text-xs sm:text-sm text-slate-400 flex items-start gap-3";
-          }
-        });
-
-        const statusEl = document.getElementById(`q-status-${qIndex}`);
-        statusEl.textContent = isCorrect ? "✓ Correct" : "✗ Incorrect";
-        statusEl.className = isCorrect ? "text-[11px] font-bold text-emerald-400" : "text-[11px] font-bold text-rose-400";
-      });
-
-      state.completedPassagesCount++;
-      state.totalWeightedEarned += passageEarned;
-      state.totalWeightedPossible += passagePossible;
-      state.totalRawCorrect += passageCorrectCount;
-      state.totalQuestionsAnswered += questions.length;
-
-      state.historyTitles.push(state.currentPassage.title);
-      state.historyLogs.push({
-        title: state.currentPassage.title,
-        topic: state.currentPassage.topic_area || "Academic Discourse",
-        earned: passageEarned,
-        possible: passagePossible,
-        rawCorrect: passageCorrectCount,
-        rawTotal: questions.length
-      });
-
-      updateHeaderStatsA();
-
-      document.getElementById('btn-submit-answers').classList.add('hidden');
-      document.getElementById('btn-next-passage').classList.remove('hidden');
-    }
-
-    function updateHeaderStatsA() {
-      document.getElementById('metric-passages').textContent = state.completedPassagesCount;
-      document.getElementById('metric-score').textContent = `${state.totalWeightedEarned} / ${state.totalWeightedPossible}`;
-
-      const pct = state.totalWeightedPossible > 0 
-        ? Math.round((state.totalWeightedEarned / state.totalWeightedPossible) * 100) 
-        : 0;
-      document.getElementById('metric-accuracy').textContent = `${pct}%`;
-    }
-
-    function finishSectionA() {
-      showView('view-summary-a');
-
-      const pct = state.totalWeightedPossible > 0 
-        ? Math.round((state.totalWeightedEarned / state.totalWeightedPossible) * 100) 
-        : 0;
-
-      document.getElementById('summary-accuracy').textContent = `${pct}%`;
-      document.getElementById('summary-raw').textContent = `${state.totalRawCorrect} / ${state.totalQuestionsAnswered}`;
-      document.getElementById('summary-passages').textContent = state.completedPassagesCount;
-
-      let bandText = "Early-stage accuracy";
-      if (pct >= 85) bandText = "Exceptional accuracy";
-      else if (pct >= 70) bandText = "Strong accuracy";
-      else if (pct >= 55) bandText = "Developing accuracy";
-
-      document.getElementById('summary-band-badge').textContent = bandText;
-
-      const logContainer = document.getElementById('summary-passage-history');
-      logContainer.innerHTML = '';
-
-      if (state.historyLogs.length === 0) {
-        logContainer.innerHTML = `<p class="text-xs text-slate-500 py-2">No passages completed in this session yet.</p>`;
-        return;
-      }
-
-      state.historyLogs.forEach((item, index) => {
-        const itemPct = item.possible > 0 ? Math.round((item.earned / item.possible) * 100) : 0;
-        const row = document.createElement('div');
-        row.className = 'p-3.5 rounded-xl bg-slate-950 border border-slate-800 flex justify-between items-center text-xs';
-        row.innerHTML = `
-          <div class="space-y-0.5 max-w-lg">
-            <span class="text-[10px] font-semibold text-amber-400 uppercase tracking-wider block">${item.topic}</span>
-            <h4 class="font-medium text-slate-100 text-sm">${index + 1}. ${item.title}</h4>
-            <p class="text-slate-400 text-[11px]">${item.rawCorrect}/${item.rawTotal} questions correct</p>
-          </div>
-          <div class="text-right shrink-0">
-            <span class="text-sm font-bold ${itemPct >= 70 ? 'text-emerald-400' : 'text-amber-400'}">${item.earned} / ${item.possible} pts</span>
-            <span class="block text-[10px] text-slate-500">${itemPct}% accuracy</span>
-          </div>
-        `;
-        logContainer.appendChild(row);
-      });
-    }
-
-
-    /* =========================================================================
-       SECTION B LOGIC (ESSAY ARENA & CAMBRIDGE MARKING)
-       ========================================================================= */
-
-    function startSectionB() {
-      showView('view-section-b');
-      startEssayTimer();
-      if (!state.currentEssayPrompt) {
-        generateNewEssayPrompt();
-      }
-    }
-
-    function startEssayTimer() {
-      if (timerInterval) clearInterval(timerInterval);
-      timerInterval = setInterval(() => {
-        if (secondsRemaining > 0) {
-          secondsRemaining--;
-          updateTimerDisplay();
-        }
-      }, 1000);
-      updateTimerDisplay();
-    }
-
-    function resetTimer() {
-      secondsRemaining = 40 * 60;
-      updateTimerDisplay();
-    }
-
-    function updateTimerDisplay() {
-      const mins = Math.floor(secondsRemaining / 60);
-      const secs = secondsRemaining % 60;
-      document.getElementById('essay-timer-display').textContent = 
-        `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-    }
-
-    function updateEssayStats() {
-      const val = document.getElementById('essay-text-input').value || "";
-      state.essayText = val;
-      const words = val.trim() ? val.trim().split(/\s+/).length : 0;
-      document.getElementById('essay-word-count').textContent = words;
-    }
-
-    async function generateNewEssayPrompt() {
-      lastAction = generateNewEssayPrompt;
-      document.getElementById('loading-main-text').textContent = "Formulating Section B Essay Prompt...";
-      document.getElementById('loading-sub-text').textContent = "Crafting high-level philosophical and legal debate scenarios";
-      showView('view-loading');
-
-      const baseTopic = state.currentPassage ? state.currentPassage.topic_area : "Law & Morality";
-
-      const promptText = `Generate ONE realistic, challenging LNAT Section B essay question in the style of Oxford and Cambridge admissions tests.
-Topic area context: ${baseTopic}.
-
-Respond with ONLY valid JSON strictly matching this structure:
-{
-  "title": "Should the law ever enforce morality?",
-  "topic_area": "Legal Philosophy / Jurisprudence",
-  "sub_questions": [
-    "Analytical sub-question or angle 1",
-    "Analytical sub-question or angle 2",
-    "Analytical sub-question or angle 3"
-  ]
-}`;
-
-      try {
-        const data = await executeGroqRequest(promptText, true);
-        state.currentEssayPrompt = data;
-
-        document.getElementById('essay-topic-badge').textContent = data.topic_area || "LNAT Section B";
-        document.getElementById('essay-prompt-title').textContent = data.title;
-        
-        const subContainer = document.getElementById('essay-prompt-subquestions');
-        subContainer.innerHTML = data.sub_questions.map(q => `<p class="flex items-start gap-2"><span>▸</span><span>${q}</span></p>`).join('');
-
-        showView('view-section-b');
-      } catch (err) {
-        handleApiError(err);
-      }
-    }
-
-    async function submitEssayForCambridgeMarking() {
-      const essay = document.getElementById('essay-text-input').value.trim();
-      if (!essay || essay.length < 50) {
-        alert("Please write a substantial essay (at least 100 words) before submitting for Cambridge evaluation.");
-        return;
-      }
-
-      lastAction = submitEssayForCambridgeMarking;
-      document.getElementById('loading-main-text').textContent = "Cambridge Tripos AI Marking in progress...";
-      document.getElementById('loading-sub-text').textContent = "Evaluating thesis strength, counterargument refutation, conceptual precision, and logical flow";
-      showView('view-loading');
-
-      const evaluationPrompt = `You are a Cambridge University Law Faculty Fellow and LNAT examiner evaluating a student's Section B essay.
-
-Essay Prompt: "${state.currentEssayPrompt ? state.currentEssayPrompt.title : 'General LNAT Legal Philosophy Prompt'}"
-
-Student Essay Submission:
-"""
-${essay}
-"""
-
-Evaluate this essay strictly out of 10 according to Cambridge Law Tripos standards.
-Respond with ONLY valid JSON strictly matching this structure:
-{
-  "score": 8,
-  "proficiency_level": "Strong First-Class (8-9)",
-  "praise": "A single, genuine sentence praising the strongest element of the student's writing.",
-  "rubric": [
-    {"criterion": "Thesis & Argument Structure", "score": 8, "feedback": "Feedback explanation string"},
-    {"criterion": "Counterargument Refutation", "score": 7, "feedback": "Feedback explanation string"},
-    {"criterion": "Conceptual Precision & Definitions", "score": 8, "feedback": "Feedback explanation string"},
-    {"criterion": "Logical Consistency & Focus", "score": 8, "feedback": "Feedback explanation string"}
-  ],
-  "growth_areas": [
-    {
-      "title": "Title of weak point",
-      "quote": "Short exact quote from student text",
-      "issue": "Explanation of why this hurts the argument",
-      "step_to_ten": "Actionable directive to reach a 10/10"
-    }
-  ],
-  "roadmap_to_ten": [
-    "Actionable step 1 to achieve 10/10",
-    "Actionable step 2 to achieve 10/10",
-    "Actionable step 3 to achieve 10/10"
-  ]
-}`;
-
-      try {
-        const evalData = await executeGroqRequest(evaluationPrompt, true);
-        renderCambridgeFeedback(evalData);
-        showView('view-section-b-feedback');
-      } catch (err) {
-        handleApiError(err);
-      }
-    }
-
-    function renderCambridgeFeedback(data) {
-      document.getElementById('sec-b-score-badge').textContent = `${data.score} / 10`;
-      document.getElementById('sec-b-band-badge').textContent = data.proficiency_level;
-      document.getElementById('sec-b-praise-line').textContent = `"${data.praise}"`;
-
-      // Rubric bars
-      const rubricContainer = document.getElementById('sec-b-rubric-grid');
-      rubricContainer.innerHTML = '';
-      
-      data.rubric.forEach(r => {
-        const barPct = (r.score / 10) * 100;
-        const colorClass = r.score >= 8 ? 'bg-emerald-400' : r.score >= 6 ? 'bg-amber-400' : 'bg-rose-400';
-        
-        const card = document.createElement('div');
-        card.className = 'bg-slate-950/80 border border-slate-800 p-4 rounded-xl space-y-2';
-        card.innerHTML = `
-          <div class="flex justify-between items-center text-xs">
-            <span class="font-semibold text-slate-200">${r.criterion}</span>
-            <span class="font-bold text-amber-400">${r.score} / 10</span>
-          </div>
-          <div class="w-full bg-slate-800 rounded-full h-1.5 overflow-hidden">
-            <div class="${colorClass} h-full rounded-full" style="width: ${barPct}%"></div>
-          </div>
-          <p class="text-[11px] text-slate-400 leading-snug">${r.feedback}</p>
-        `;
-        rubricContainer.appendChild(card);
-      });
-
-      // Growth Areas with text quotes
-      const growthContainer = document.getElementById('sec-b-growth-list');
-      growthContainer.innerHTML = '';
-
-      data.growth_areas.forEach((item, idx) => {
-        const el = document.createElement('div');
-        el.className = 'bg-slate-950/80 border border-slate-800/80 rounded-xl p-4 sm:p-5 space-y-2.5 text-xs';
-        el.innerHTML = `
-          <div class="flex items-center gap-2">
-            <span class="w-5 h-5 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-400 font-bold flex items-center justify-center text-[10px]">
-              ${idx + 1}
-            </span>
-            <h4 class="font-bold text-slate-200 text-sm">${item.title}</h4>
-          </div>
-
-          ${item.quote ? `
-          <div class="bg-slate-900 border-l-2 border-amber-400 p-2.5 rounded text-slate-300 italic font-serif text-[11px]">
-            "${item.quote}"
-          </div>` : ''}
-
-          <p class="text-slate-400 leading-relaxed">${item.issue}</p>
-
-          <div class="bg-amber-500/10 border border-amber-500/20 rounded-lg p-2.5 text-amber-200 text-[11px] font-medium">
-            <strong>🚀 Step to 10/10:</strong> ${item.step_to_ten}
-          </div>
-        `;
-        growthContainer.appendChild(el);
-      });
-
-      // Roadmap items
-      const roadmapContainer = document.getElementById('sec-b-roadmap-list');
-      roadmapContainer.innerHTML = '';
-      data.roadmap_to_ten.forEach(step => {
-        const li = document.createElement('li');
-        li.className = 'flex items-start gap-2.5';
-        li.innerHTML = `<span class="text-amber-400 font-bold">✓</span><span>${step}</span>`;
-        roadmapContainer.appendChild(li);
-      });
-    }
   </script>
 </body>
 </html>
