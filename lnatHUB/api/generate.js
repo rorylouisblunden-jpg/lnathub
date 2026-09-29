@@ -1,56 +1,82 @@
 export default async function handler(req, res) {
-  // 1. Only allow POST requests from your HTML form
+  // 1. Enforce POST requests
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  // 2. Extract the user input sent by your HTML script
-  const { prompt } = req.body;
+  // 2. Safe Body Parsing (Handles parsed objects or raw JSON strings)
+  let body = req.body;
+  if (typeof body === 'string') {
+    try {
+      body = JSON.parse(body);
+    } catch (parseErr) {
+      return res.status(400).json({ error: 'Invalid JSON payload sent from frontend' });
+    }
+  }
 
-  if (!prompt) {
-    return res.status(400).json({ error: 'Missing prompt in request body' });
+  // Extract prompt safely across potential key naming variations
+  const promptText = body?.prompt || body?.text || body?.message;
+
+  if (!promptText) {
+    return res.status(400).json({ 
+      error: 'Missing prompt parameter in request body.' 
+    });
+  }
+
+  // 3. Ensure API Key exists
+  const apiKey = process.env.GROQ_API_KEY || process.env.LNATHUB_API_KEY;
+  if (!apiKey) {
+    return res.status(500).json({ 
+      error: 'GROQ_API_KEY is not configured in Vercel Environment Variables.' 
+    });
   }
 
   try {
-    // 3. Make the API call to Groq
-    const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+    // 4. Request to Groq API
+    const groqResponse = await fetch("https://api.groq.com/openai/v1/chat/completions", {
       method: "POST",
       headers: {
-        "Authorization": `Bearer ${process.env.GROQ_API_KEY}`,
+        "Authorization": `Bearer ${apiKey.trim()}`,
         "Content-Type": "application/json"
       },
       body: JSON.stringify({
         model: "llama-3.3-70b-versatile",
         messages: [
-          { 
-            role: "system", 
-            content: "You are an expert LNAT tutor evaluating legal reasoning, spot-checking logical fallacies, and analyzing Section B essay structures." 
+          {
+            role: "system",
+            content: "You are an expert LNAT tutor evaluating legal logic, spot-checking fallacies, and grading Section B essays."
           },
-          { 
-            role: "user", 
-            content: prompt 
+          {
+            role: "user",
+            content: String(promptText)
           }
         ],
         temperature: 0.5
       })
     });
 
-    const data = await response.json();
+    const data = await groqResponse.json();
 
-    // 4. Catch errors returned directly from Groq
-    if (!response.ok) {
-      console.error("Groq Raw Error Output:", JSON.stringify(data));
-      return res.status(response.status).json({ 
-        error: data.error?.message || 'Groq API returned an error' 
+    // 5. Catch Groq-specific response errors
+    if (!groqResponse.ok) {
+      console.error("Groq Error Response Payload:", data);
+      const groqMsg = data.error?.message || data.error || 'Groq API rejected request';
+      return res.status(groqResponse.status).json({ 
+        error: `Groq Error (${groqResponse.status}): ${groqMsg}` 
       });
     }
 
-    // 5. Send back the generated text to your HTML page
-    const outputText = data.choices[0].message.content;
-    return res.status(200).json({ result: outputText });
+    // 6. Return successful text generation output
+    const resultText = data.choices?.[0]?.message?.content;
+    
+    if (!resultText) {
+      return res.status(500).json({ error: 'Groq returned an empty response.' });
+    }
+
+    return res.status(200).json({ result: resultText });
 
   } catch (error) {
-    console.error("Serverless Crash:", error);
-    return res.status(500).json({ error: error.message });
+    console.error("Serverless Function Runtime Exception:", error);
+    return res.status(500).json({ error: `Server Crash: ${error.message}` });
   }
 }
