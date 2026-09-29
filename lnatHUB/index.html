@@ -1095,77 +1095,115 @@ Return ONLY JSON matching this structure:
        API EXECUTION & ERROR HANDLING
        ========================================================================= */
 
-    function cleanSchema(obj) {
-      if (!obj || typeof obj !== 'object') return obj;
-      if (Array.isArray(obj)) return obj.map(cleanSchema);
-      const cleaned = {};
-      for (const [key, val] of Object.entries(obj)) {
-        if (key === 'type' && typeof val === 'string') {
-          cleaned[key] = val.toLowerCase();
-        } else {
-          cleaned[key] = cleanSchema(val);
-        }
+  <!-- Include Google Gen AI SDK -->
+<script type="importmap">
+  {
+    "imports": {
+      "@google/genai": "https://esm.run/@google/genai"
+    }
+  }
+</script>
+
+<script type="module">
+  import { GoogleGenAI, Type } from '@google/genai';
+
+  // Helper to map standard string types to GoogleGenAI Type Enums
+  function convertTypeToEnum(typeStr) {
+    switch (typeStr?.toLowerCase()) {
+      case 'object': return Type.OBJECT;
+      case 'array': return Type.ARRAY;
+      case 'string': return Type.STRING;
+      case 'integer': return Type.INTEGER;
+      case 'number': return Type.NUMBER;
+      case 'boolean': return Type.BOOLEAN;
+      default: return typeStr;
+    }
+  }
+
+  function formatSchemaForGenAI(obj) {
+    if (!obj || typeof obj !== 'object') return obj;
+    if (Array.isArray(obj)) return obj.map(formatSchemaForGenAI);
+    
+    const formatted = {};
+    for (const [key, val] of Object.entries(obj)) {
+      if (key === 'type') {
+        formatted[key] = convertTypeToEnum(val);
+      } else {
+        formatted[key] = formatSchemaForGenAI(val);
       }
-      return cleaned;
+    }
+    return formatted;
+  }
+
+  window.executeGeminiRequest = async function(prompt, schema) {
+    // Check for API key in memory or localStorage
+    let apiKey = sessionApiKey || localStorage.getItem('lnat_gemini_api_key');
+    
+    if (!apiKey) {
+      openApiKeyModal();
+      throw new Error("API Key required. Please enter your Gemini API key.");
     }
 
-    async function executeGeminiRequest(prompt, schema) {
-      const response = await fetch('/api/generate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [{ role: 'user', parts: [{ text: prompt }] }],
-          generationConfig: {
-            responseMimeType: "application/json",
-            responseSchema: cleanSchema(schema),
-            temperature: 0.8
-          }
-        })
+    const ai = new GoogleGenAI({ apiKey: apiKey });
+    
+    try {
+      const response = await ai.models.generateContent({
+        model: 'gemini-2.5-flash',
+        contents: prompt,
+        config: {
+          responseMimeType: 'application/json',
+          responseSchema: formatSchemaForGenAI(schema),
+          temperature: 0.8
+        }
       });
 
-      const result = await response.json();
-
-      if (!response.ok) {
-        const message = result.error?.message || `Server Error (${response.status})`;
-        throw new Error(message);
+      if (!response.text) {
+        throw new Error("Empty response received from generation engine.");
       }
 
-      const jsonStr = result.candidates?.[0]?.content?.parts?.[0]?.text;
-      if (!jsonStr) throw new Error("Empty response received from generation engine.");
-
-      return JSON.parse(jsonStr);
-    }
-
-    function handleApiError(err) {
-      console.error("API Error:", err);
-      document.getElementById('error-message-text').textContent = err.message || "Could not complete generation.";
-      showView('view-error');
-    }
-
-    function retryLastAction() {
-      if (typeof lastAction === 'function') {
-        lastAction();
-      } else {
-        showView('view-main-menu');
+      return JSON.parse(response.text);
+    } catch (err) {
+      // If unauthorized/invalid key, clear stored key so user can re-enter
+      if (err.message && (err.message.includes('401') || err.message.includes('API key'))) {
+        localStorage.removeItem('lnat_gemini_api_key');
+        sessionApiKey = "";
       }
+      throw err;
     }
+  };
 
-    function openApiKeyModal() {
-      document.getElementById('api-key-modal').classList.remove('hidden');
-    }
+  window.handleApiError = function(err) {
+    console.error("API Error:", err);
+    document.getElementById('error-message-text').textContent = err.message || "Could not complete generation.";
+    showView('view-error');
+  };
 
-    function saveUserApiKey() {
-      const val = document.getElementById('input-api-key').value.trim();
-      if (val) {
-        sessionApiKey = val;
-        closeApiKeyModal();
-        retryLastAction();
-      }
+  window.retryLastAction = function() {
+    if (typeof lastAction === 'function') {
+      lastAction();
+    } else {
+      showView('view-main-menu');
     }
+  };
 
-    function closeApiKeyModal() {
-      document.getElementById('api-key-modal').classList.add('hidden');
+  window.openApiKeyModal = function() {
+    document.getElementById('api-key-modal').classList.remove('hidden');
+  };
+
+  window.saveUserApiKey = function() {
+    const val = document.getElementById('input-api-key').value.trim();
+    if (val) {
+      sessionApiKey = val;
+      localStorage.setItem('lnat_gemini_api_key', val);
+      closeApiKeyModal();
+      retryLastAction();
     }
+  };
+
+  window.closeApiKeyModal = function() {
+    document.getElementById('api-key-modal').classList.add('hidden');
+  };
+</script>
   </script>
 </body>
 </html>
