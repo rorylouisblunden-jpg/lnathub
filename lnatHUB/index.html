@@ -1091,11 +1091,9 @@ Return ONLY JSON matching this structure:
       });
     }
 
-<!-- =========================================================================
-     API EXECUTION & ERROR HANDLING
-     ========================================================================= -->
+<!-- API EXECUTION & ERROR HANDLING -->
 
-<!-- Include Google Gen AI SDK -->
+<!-- Importmap MUST come BEFORE any type="module" scripts -->
 <script type="importmap">
   {
     "imports": {
@@ -1111,7 +1109,7 @@ Return ONLY JSON matching this structure:
   let sessionApiKey = "";
   let lastAction = null;
 
-  // Convert raw JSON Schema types into GoogleGenAI Type enums
+  // Helper function to map schema string types to GoogleGenAI Type Enums
   function convertTypeToEnum(typeStr) {
     switch (typeStr?.toLowerCase()) {
       case 'object': return Type.OBJECT;
@@ -1139,7 +1137,6 @@ Return ONLY JSON matching this structure:
     return formatted;
   }
 
-  // Fallback view navigation if showView is defined elsewhere
   function safeShowView(viewId) {
     if (typeof window.showView === 'function') {
       window.showView(viewId);
@@ -1152,7 +1149,7 @@ Return ONLY JSON matching this structure:
     }
   }
 
-  // Explicitly attach methods to window object for inline HTML event handlers
+  // Bind functions directly to window so HTML onclick handlers can access them
   window.executeGeminiRequest = async function(prompt, schema) {
     let apiKey = sessionApiKey || localStorage.getItem('lnat_gemini_api_key');
     
