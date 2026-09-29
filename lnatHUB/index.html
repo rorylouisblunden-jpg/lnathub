@@ -1091,9 +1091,9 @@ Return ONLY JSON matching this structure:
       });
     }
 
-/* =========================================================================
-   API EXECUTION & ERROR HANDLING
-   ========================================================================= */
+<!-- =========================================================================
+     API EXECUTION & ERROR HANDLING
+     ========================================================================= -->
 
 <!-- Include Google Gen AI SDK -->
 <script type="importmap">
@@ -1107,11 +1107,11 @@ Return ONLY JSON matching this structure:
 <script type="module">
   import { GoogleGenAI, Type } from '@google/genai';
 
-  // Internal state tracking
+  // Shared state variables
   let sessionApiKey = "";
   let lastAction = null;
 
-  // Helper to map standard schema string types to GoogleGenAI Type Enums
+  // Convert raw JSON Schema types into GoogleGenAI Type enums
   function convertTypeToEnum(typeStr) {
     switch (typeStr?.toLowerCase()) {
       case 'object': return Type.OBJECT;
@@ -1139,8 +1139,20 @@ Return ONLY JSON matching this structure:
     return formatted;
   }
 
-  // --- Explicit Window Bindings for Inline Event Handlers ---
+  // Fallback view navigation if showView is defined elsewhere
+  function safeShowView(viewId) {
+    if (typeof window.showView === 'function') {
+      window.showView(viewId);
+    } else {
+      const target = document.getElementById(viewId);
+      if (target) {
+        document.querySelectorAll('[id^="view-"]').forEach(el => el.classList.add('hidden'));
+        target.classList.remove('hidden');
+      }
+    }
+  }
 
+  // Explicitly attach methods to window object for inline HTML event handlers
   window.executeGeminiRequest = async function(prompt, schema) {
     let apiKey = sessionApiKey || localStorage.getItem('lnat_gemini_api_key');
     
@@ -1182,9 +1194,7 @@ Return ONLY JSON matching this structure:
     if (errorElem) {
       errorElem.textContent = err.message || "Could not complete generation.";
     }
-    if (typeof window.showView === 'function') {
-      window.showView('view-error');
-    }
+    safeShowView('view-error');
   };
 
   window.setLastAction = function(fn) {
@@ -1196,8 +1206,8 @@ Return ONLY JSON matching this structure:
   window.retryLastAction = function() {
     if (typeof lastAction === 'function') {
       lastAction();
-    } else if (typeof window.showView === 'function') {
-      window.showView('view-main-menu');
+    } else {
+      safeShowView('view-main-menu');
     }
   };
 
